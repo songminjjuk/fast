@@ -4,7 +4,7 @@ pipeline {
         GITNAME = 'songminjjuk'
         GITMAIL = 'alstjrdlep@naver.com'
         GITWEBADD = 'https://github.com/songminjjuk/fast.git'
-        GITSSHADD = 'git@github.com:songminjjuk/fast.git'
+        GITSSHADD = 'git@github.com:songminjjuk/deployment.git'
         GITCREDENTIAL = 'git_cre'
         DOCKERHUB = 'alstjrdlep/fast'
         DOCKERHUBCREDENTIAL = 'docker_cre'
@@ -50,10 +50,35 @@ pipeline {
             }
             post {
                 failure {
-                    sh "echo image build failed"
+                    sh "docker image rm -f ${DOCKERHUB}:${currentBuild.number}"
+                    sh "docker image rm -f ${DOCKERHUB}:latest"
+                    sh "echo push failed"
                 }
                 success {
-                    sh "echo image build success"
+                    sh "echo push success"
+                }
+             }
+        }
+        stage('Git Deployment update manifest file') {
+            steps {
+                git credentialsId: GITCREDENTIAL, url: GITSSHADD, branch: 'main'
+                sh "git config --global user.email ${GITEMAIL}"
+                sh "git config --global user.name ${GITNAME}"
+                sh "sed -i 's@${DOCKERHUB}:.*@${DOCKERHUB}:${currentBuild.number}@g' fast.yml"
+                
+                sh "git add ."
+                sh "git branch -M main"
+                sh "git commit -m 'fixed tag ${currentBuild.number}'"
+                sh "git remote remove origin"
+                sh "git remote add origin ${GITSSHADD}"
+                sh "git push origin main"
+            }
+            post {
+                failure {
+                    sh "echo clone failed"
+                }
+                success {
+                    sh "echo clone success"
                 }
             }
         }
