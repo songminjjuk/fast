@@ -62,7 +62,7 @@ pipeline {
         stage('Git Deployment update manifest file') {
             steps {
                 git credentialsId: GITCREDENTIAL, url: GITSSHADD, branch: 'main'
-                sh "git config --global user.email ${GITEMAIL}"
+                sh "git config --global user.email ${GITMAIL}"
                 sh "git config --global user.name ${GITNAME}"
                 sh "sed -i 's@${DOCKERHUB}:.*@${DOCKERHUB}:${currentBuild.number}@g' fast.yml"
                 
@@ -75,10 +75,10 @@ pipeline {
             }
             post {
                 failure {
-                    sh "echo clone failed"
+                    sh "echo update manifest failed"
                 }
                 success {
-                    sh "echo clone success"
+                    sh "echo update manifest success"
                 }
             }
         }
